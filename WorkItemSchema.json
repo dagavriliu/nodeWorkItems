@@ -1,0 +1,55 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "title": "WorkItem",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": ["string", "number"]
+        },
+        "sprint": {
+            "type": "string"
+        },
+        "type": {
+            "type": "string"
+        },
+        "status": {
+            "type": "string"
+        },
+        "closedDate": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "createdDate": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "title": {
+            "type": "string"
+        },
+        "viewUrl": {
+            "type": "string",
+            "format": "uri"
+        },
+        "childrenIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "minItems": 0
+        },
+        "source": {
+            "type": "string"
+        },
+        "effort": {
+            "type": "number"
+        },
+        "severity": {
+            "type": "string"
+        },
+        "parentIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "minItems": 0
+        }
+
+    },
+    "required": ["id", "title", "createdDate", "type"]
+}

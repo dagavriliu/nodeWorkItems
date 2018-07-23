@@ -1,0 +1,102 @@
+ul {
+    list-style-type: none;
+}
+
+ul li {
+    list-style-type: none;
+}
+
+a {
+    cursor: pointer;
+}
+
+.info {
+    background-color: #e2e2e2 !important;
+}
+
+.warn {
+    background-color: aliceblue;
+}
+
+tr[ng-click] {
+    cursor: pointer;
+}
+
+tr[ng-click]:hover {
+    background-color: #f1b8b8;
+}
+
+.severity.high {
+    background-color: green;
+}
+
+.severity.critical {
+    background-color: red;
+}
+
+table {
+    width: 100%;
+}
+
+td>div.left,
+td>div.right {
+    display: inline-block;
+}
+
+.table-view td:nth-child(1) {
+    width: 20%;
+}
+
+.table-view td:nth-child(2) {
+    width: 50%;
+}
+
+.table-view td:nth-child(3) {
+    width: 20%;
+}
+
+.table-view td:nth-child(4) {
+    width: 10%;
+}
+
+#grouped-by-sprint .odd table {
+    border: 1px solid black;
+}
+
+.highlight {
+    background-color: aliceblue;
+}
+
+.mini-container {
+    display: block;
+    clear: both;
+}
+
+.mini-container>div {
+    display: inline-block;
+}
+
+td.mini-container:after {
+    clear: both;
+}
+
+.left {
+    float: left;
+}
+
+.right {
+    float: right;
+}
+
+.row-header {
+    padding: 0 5px 0 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    display: inline-block;
+}

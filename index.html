@@ -1,0 +1,65 @@
+<!doctype html>
+<html ng-app="workItemApp">
+
+<head>
+    <!-- <link href='/bower_components/bootstrap/dist/css/bootstrap.min.css' rel='stylesheet' />
+    <link href='/bower_components/bootstrap/dist/css/bootstrap-theme.min.css' rel='stylesheet' /> -->
+
+    <!-- <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.css"> -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css"> -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.default.css"> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/5.3.0/ajv.bundle.js" integrity="sha256-pyb7dN48zWgLhOTYnkQ4trMvc83fdis6ZF0lOAgDVGM="
+        crossorigin="anonymous"></script> -->
+    <script src="/dist/bundle.js"></script>
+</head>
+
+<body ng-app="workItemApp">
+    <h2>Work Items</h2>
+    <a id='download-json'></a>
+    <div ng-controller="WorkItemController as wic" class="container">
+        <input type="text" ng-model="wic.view.cachedJsonPath" />
+        <button type="button" ng-click="wic.loadJson()">load JSON</button>
+        <button type="button" ng-click="wic.saveJson()">save JSON</button>
+        <button type="button" ng-click="wic.runLiveQueries()">live Query</button>
+        <input type="text" ng-model='wic.view.cachedViewPath' />
+        <button type="button" ng-click="wic.loadView()">load view</button>
+        <button type="button" ng-click="wic.saveView()">save view</button>
+        <div class="table-view" id="grouped-by-user">
+            <h1>
+                <a ng-click="wic.view.ui.showPerUser = !!!wic.view.ui.showPerUser">({{wic.view.ui.showPerUser ? '+' : '-'}}) Items per user ({{wic.view.perUser.length}})</a>
+            </h1>
+            <div ng-show="!wic.view.ui.showPerUser" ng-repeat="group in wic.view.perUser | orderBy : 'key'">
+                <h2>
+                    <a ng-click="group.showItems = !!!group.showItems">({{group.showItems ? '-':'+'}}) {{group.key}} </a>
+                    <a ng-click="wic.toggleSet(group.values, 'showDetails', group, 'showItemDetails')">({{group.showItemDetails ? '--' : '++'}})</a>
+                </h2>
+                <span>({{group.values.length}}) items - ({{group.stats.activeEffort}}) active effort - ({{group.stats.totalEffort}})
+                    - total effort
+                </span>
+                <div ng-show="group.showItems" ng-repeat="item in group.values | orderBy : ['-onlyCodeReview','sprint', 'closedDate']">
+                    <work-item-details item="item" highlight="{assignedTo: group.key}" users="wic.view.users" ng-class="{'odd' : $odd}"></work-item-details>
+                </div>
+            </div>
+        </div>
+        <div class="table-view" id="grouped-by-sprint">
+            <h1>
+                <a ng-click="wic.view.ui.showAll = !!!wic.view.ui.showAll">({{wic.view.ui.showAll ? '-' : '+'}}) Items per sprint ({{wic.view.perSprint.length}})</a>
+            </h1>
+            <div ng-show="wic.view.ui.showAll" ng-repeat="sprint in wic.view.perSprint | orderBy : ['key']">
+                <h2>
+                    <a ng-click="wic.toggleSet(sprint.values, 'showItem', sprint, 'showItems')">{{sprint.showItems ? '-' : '+'}} {{sprint.key}}
+                    </a>
+                    <a ng-click="wic.toggleSet(sprint.values, 'showDetails', sprint, 'showItemDetails')">({{sprint.showItemDetails ? '--' : '++'}})
+                    </a>
+                </h2>
+                <span>({{sprint.values.length}}) items - ({{sprint.stats.totalEffort}}) - total effort </span>
+
+                <div ng-repeat="item in sprint.values" ng-show="sprint.showItems">
+                    <work-item-details item="item" users="wic.view.users" ng-class="{'odd' : $odd}"></work-item-details>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

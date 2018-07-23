@@ -1,0 +1,39 @@
+<table ng-class="{'info' : item.onlyCodeReview}">
+    <thead>
+        <tr ng-click="item.showDetails = !!!item.showDetails">
+            <td class="row row-header">
+                <div class="left">({{item.showDetails ? '-' : '+'}})&nbsp;{{item.sprint}}</div>
+                <div class="right">
+                    <span>{{item.type}}</span>
+                    <span class="severity {{item.severity}}">{{item.severity}}</span>
+                    <span>{{item.effort}}</span>
+
+                </div>
+            </td>
+            <td>
+                {{item.title}}
+                                    <a ng-href="{{item.viewUrl}}">(details)</a>
+            </td>
+            <td>
+            <!-- 
+                <ui-select multiple ng-if="item.type == 'bug'" theme="select2" style="width:180px" ng-model="item.blame">
+                    <ui-select-match placeholder="select ...">{{$item}}</ui-select-match>
+                    <ui-select-choices repeat="user in users">
+                        <div ng-bind="user"/>
+                    </ui-select-choices>
+                </ui-select>
+                -->
+            &nbsp;</td>
+            <td>{{item.closedDate | date : short}}</td>
+        </tr>
+    </thead>
+    <tbody ng-show="!!item.showDetails" ng-repeat="child in item.children">
+        <tr ng-class="{'highlight' : highlight.assignedTo == child.assignedTo}">
+            <td>&nbsp;</td>
+            <td>
+                <a ng-href="{{child.viewUrl}}" target="_blank">{{child.title}}</a>
+            </td>
+            <td colspan="2" >{{child.assignedTo}}</td>
+        </tr>
+    </tbody>
+</table>
