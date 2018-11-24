@@ -22,7 +22,7 @@ export function JiraServiceHttpBuilder(q, http, endpoint, username, password, pr
     };
     var self = this;
 
-    this.mapItem = function (item) {
+    this.mapItem = function(item) {
         var model = {
             id: item.key,
         };
@@ -55,10 +55,10 @@ export function JiraServiceHttpBuilder(q, http, endpoint, username, password, pr
         return model;
     };
 
-    this.getItems = function (query) {
+    this.getItems = function(query) {
         const deferred = $q.defer();
 
-        $http(self.query(query)).then(function (result) {
+        $http(self.query(query)).then(function handleSuccess(result) {
             let skip = 0,
                 take = 50,
                 total = result.data.total;
@@ -70,18 +70,20 @@ export function JiraServiceHttpBuilder(q, http, endpoint, username, password, pr
             }
             hs.batchPromises($q, httpOptions, $http, {
                 batchSize: 5
-            }, function (response) {
+            }, function(response) {
                 var mapped = response.data.issues.map(self.mapItem);
                 return mapped;
-            }).then(function (items) {
+            }).then(function(items) {
                 var result = issues.concat(items);
                 deferred.resolve(result);
             });
+        }, function handleError(response) {
+            console.error(response);
         });
 
         return deferred.promise;
     };
-    this.item = function (id) {
+    this.item = function(id) {
         return {
             method: 'GET',
             url: url + '/rest/api/2/issue/' + id,
@@ -89,7 +91,7 @@ export function JiraServiceHttpBuilder(q, http, endpoint, username, password, pr
         }
     }
 
-    this.query = function (query, skip, take) {
+    this.query = function(query, skip, take) {
         var params = {
             jql: query,
             startAt: skip || 0,

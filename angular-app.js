@@ -25,7 +25,7 @@ const vssOptions = require("./config/VssOptions.json");
 const jiraOptions = require("./config/JiraOptions.json");
 
 
-app.controller('WorkItemController', ['$q', '$scope', '$http', function ($q, $scope, $http) {
+app.controller('WorkItemController', ['$q', '$scope', '$http', function($q, $scope, $http) {
 
     var controller = this;
     controller.view = {
@@ -51,28 +51,28 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function ($q, $sc
 
     this.view.cachedJsonPath = defaultJsonFilename;
 
-    this.saveJson = function () {
-        $http.post('/upload/' + controller.view.cachedJsonPath, controller._raw).then(function (response) {
+    this.saveJson = function() {
+        $http.post('/upload/' + controller.view.cachedJsonPath, controller._raw).then(function(response) {
             console.log('upload complete');
         });
     }
 
     this.view.cachedViewPath = 'cachedView.json';
 
-    this.loadJson = function () {
-        $http.get('/upload/' + controller.view.cachedJsonPath).then(function (r) {
+    this.loadJson = function() {
+        $http.get('/upload/' + controller.view.cachedJsonPath).then(function(r) {
             updateController(r.data);
         })
     }
     controller.loadJson();
 
-    this.toggleSet = function (items, propertyName, stateHolder, stateHolderProperty) {
+    this.toggleSet = function(items, propertyName, stateHolder, stateHolderProperty) {
         stateHolder[stateHolderProperty] = !!!stateHolder[stateHolderProperty];
         items.forEach(item => item[propertyName] = stateHolder[stateHolderProperty]);
     }
 
-    this.runLiveQueries = function () {
-        var jiraQuery = "sprint in ('DEV Sprint 133','DEV Sprint 134','DEV Sprint 135','DEV Sprint 136','DEV Sprint 137', 'DEV Sprint 138', 'DEV Sprint 139', 'DEV Sprint 140') and project = DEV ORDER BY created ASC";
+    this.runLiveQueries = function() {
+        var jiraQuery = "sprint in ('DEV Sprint 144', 'DEV Sprint 145', 'DEV Sprint 146', 'DEV Sprint 147', 'DEV Sprint 148', 'DEV Sprint 149', 'DEV Sprint 150', 'DEV Sprint 151', 'DEV Sprint 152', 'DEV Sprint 153', 'DEV Sprint 154', 'DEV Sprint 155', 'DEV Sprint 156', 'DEV Sprint 157', 'DEV Sprint 158', 'DEV Sprint 159', 'DEV Sprint 160', 'DEV Sprint 161', 'DEV Sprint 162', 'DEV Sprint 163', 'DEV Sprint 164', 'DEV Sprint 165') and project = DEV ORDER BY created ASC";
         // jiraQuery = "sprint in ('DEV Sprint 134') and project = DEV ORDER BY created ASC";
 
         //         var vssQuery = `
@@ -106,16 +106,19 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function ($q, $sc
         controller.view.perUser = [];
 
         function applyOnBatch(mapFn) {
-            return function (batch) {
+            return function(batch) {
                 var mappedBatch = batch.map(mapFn);
                 var processed = processResults(mappedBatch);
                 updateController(processed.concat(controller.view.workItems || []));
             }
         }
 
-        $q.all([jiraBuilder.getItems(jiraQuery), vssBuilder.getItems(vssQuery)]).then(function (results) {
-            var mappedItems = results[0].concat(results[1]);
-            updateController(mappedItems);
+        $q.all([
+            jiraBuilder.getItems(jiraQuery),
+            // vssBuilder.getItems(vssQuery)
+        ]).then(function(results) {
+            var agg = results.reduce((a, i) => a.concat(i), []);
+            updateController(agg);
         });
 
     }
@@ -130,7 +133,7 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function ($q, $sc
         //var localItems = items.filter(item=>['deleted', 'removed'].indexOf((item.status || '').toLowerCase()) < 0);
         var parentIdMap = {};
         var localItems = items;
-        localItems.forEach(function (item) {
+        localItems.forEach(function(item) {
             item.children = localItems.filter(c => item.childrenIds.indexOf(c.id) > -1);
             item.parents = localItems.filter(p => item.parentIds.indexOf(p.id) > -1);
             item.parentIds.forEach(id => parentIdMap[id] = id);
@@ -142,13 +145,13 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function ($q, $sc
 
     function getGroupKeysByFn(items, groupKeyFn) {
         var keyMap = {};
-        var addToMap = function (item) {
+        var addToMap = function(item) {
             var itemKey = groupKeyFn(item);
             if (!!itemKey) {
                 keyMap[itemKey] = itemKey;
             }
         }
-        items.forEach(function (item) {
+        items.forEach(function(item) {
             addToMap(item);
             if (item.children && item.children.length > 0) {
                 item.children.forEach(addToMap);
@@ -159,7 +162,7 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function ($q, $sc
 
     function groupPerSprint(items) {
         var keyMap = getGroupKeysByFn(items, item => item.sprint);
-        var perSprintHierarchical = Object.keys(keyMap).map(function (sprintKey) {
+        var perSprintHierarchical = Object.keys(keyMap).map(function(sprintKey) {
             var entry = {
                 key: sprintKey,
                 values: angular.copy(items.filter(item => item.sprint == sprintKey || item.children.some(child => child.sprint == sprintKey))),
@@ -181,7 +184,7 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function ($q, $sc
 
         var keyMap = getGroupKeysByFn(items, item => item.assignedTo);
 
-        var perUserHierarchical = Object.keys(keyMap).map(function (key) {
+        var perUserHierarchical = Object.keys(keyMap).map(function(key) {
             var entry = {
                 key: key,
                 values: angular.copy(items.filter(item => item.assignedTo == key || item.children.some(child => child.assignedTo == key))),
@@ -192,7 +195,7 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function ($q, $sc
                     activeEffort: 0
                 }
             };
-            entry.values.forEach(function (item) {
+            entry.values.forEach(function(item) {
                 var cr = item.children.filter(c => c.assignedTo == key && c.title.toLowerCase().indexOf('code review') > -1);
                 if (cr.length > 0) {
                     entry.stats.codeReviews.push(item);
@@ -209,7 +212,7 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function ($q, $sc
         return perUserHierarchical;
     }
 }]);
-app.directive('workItemDetails', function () {
+app.directive('workItemDetails', function() {
     return {
         scope: {
             item: '=',
@@ -218,14 +221,14 @@ app.directive('workItemDetails', function () {
         },
         restrict: 'E',
         templateUrl: 'workitem-partial.html',
-        link: function ($scope, $element, $attrs) {
+        link: function($scope, $element, $attrs) {
             Object.keys($scope.item).forEach(p => !!$scope.highlight && $scope.highlight.hasOwnProperty[p] ? $scop.highlight[p] = $scope.item[p] : null);
         }
     }
 })
-app.filter('groupBy', ['$parse', function ($parse) {
+app.filter('groupBy', ['$parse', function($parse) {
     /// https://stackoverflow.com/questions/19992090/angularjs-group-by-directive-without-external-dependencies#20645945
-    return function (list, group_by) {
+    return function(list, group_by) {
 
         var filtered = [];
         var prev_item = null;
@@ -236,7 +239,7 @@ app.filter('groupBy', ['$parse', function ($parse) {
         var new_field = 'group_by_CHANGED';
 
         // loop through each item in the list
-        angular.forEach(list, function (item) {
+        angular.forEach(list, function(item) {
 
             group_changed = false;
 
