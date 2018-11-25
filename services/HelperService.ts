@@ -3,7 +3,7 @@ export function toggleSet(items: any[], propertyName: string, stateHolder: any, 
   items.forEach(item => (item[propertyName] = stateHolder[stateHolderProperty]));
 }
 
-export function stringifyOnce(obj: any, replacer: any, indent?: string | number) {
+export function stringifyOnce(obj: any, replacer?: any, indent?: string | number) {
   let printedObjects: any[] = [];
   let printedObjectKeys: any[] = [];
 
@@ -51,6 +51,13 @@ export function stringifyOnce(obj: any, replacer: any, indent?: string | number)
 }
 
 export class HelperService {
+  private $q: ng.IQService;
+  private $http: ng.IHttpService;
+  constructor($q: ng.IQService, $http: ng.IHttpService) {
+    this.$q = $q;
+    this.$http = $http;
+  }
+
   arrayUnion(a: any[], b: any[]) {
     return a.concat(b.filter(item => a.indexOf(item) < 0));
   }
@@ -75,7 +82,8 @@ export class HelperService {
     }, {});
   }
 
-  batchPromises<T>($q: ng.IQService, items: T[], fn: (p: T) => Promise<T>, options: any, filter: any) {
+  batchPromises<T>(items: T[], options: any, filter: any) {
+    const self = this;
     const batched: any[] = [];
     let index = options.batchSize - 1;
     let _filter = filter || ((item: any) => item);
@@ -87,13 +95,14 @@ export class HelperService {
         return getCurrentItem(nextItem);
       }
     }
-    function getCurrentItem(item: any): Promise<any> {
-      return fn(item)
+    function getCurrentItem(item: any): any {
+      return self
+        .$http(item)
         .then(function(result) {
           const filtered = _filter(result);
           if (filtered) {
             if (filtered instanceof Array) {
-              filtered.forEach(batched.push);
+              filtered.forEach(f => batched.push(f));
             } else {
               batched.push(filtered);
             }
@@ -105,12 +114,8 @@ export class HelperService {
           return options.retry ? getCurrentItem(item) : getNextItem();
         });
     }
-    var promises = items.slice(0, options.batchSize).map(function(item) {
-      return getCurrentItem(item);
-    });
-    return $q.all(promises).then(function() {
-      return batched;
-    });
+    var promises = items.slice(0, options.batchSize).map(item => getCurrentItem(item));
+    return self.$q.all(promises).then(() => batched);
   }
 
   getIdFromUri(uri: string): number {

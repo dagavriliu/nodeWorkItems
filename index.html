@@ -20,13 +20,13 @@
             <button type="button" ng-click="$ctrl.saveView()">save view</button>
         </div>
         <div>
-            <work-items-per-user items="$ctrl.view.perUser" users="$ctrl.view.users"></work-items-per-user>
-            <work-items-per-sprint items="$ctrl.view.perSprint" users="$ctr.view.users"></work-items-per-sprint>
+            <work-items-per-user items="$ctrl.model.perUser" users="$ctrl.model.users"></work-items-per-user>
+            <work-items-per-sprint items="$ctrl.model.perSprint" users="$ctr.model.users"></work-items-per-sprint>
         </div>
     </div>
 
-
-    <script src="/dist/bundle.js"></script>
+    <script src="/dist/vendor.bundle.js"></script>
+    <script src="/dist/main.bundle.js"></script>
 </body>
 
 </html>

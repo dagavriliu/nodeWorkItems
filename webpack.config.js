@@ -2,9 +2,10 @@ const path = require('path');
 
 module.exports = {
     entry: './app.ts',
+    mode: 'development',
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'bundle.js'
+        filename: '[name].bundle.js'
     },
     devtool: 'inline-source-map',
     resolve: {
@@ -30,5 +31,17 @@ module.exports = {
                 ]
             }
         ]
+    },
+    optimization: {
+        splitChunks: {
+            name: false,
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/](node_modules|vendor)[\\/]/,
+                    name: 'vendor',
+                    chunks: 'all'
+                },
+            }
+        }
     }
 };

@@ -1,8 +1,7 @@
 import { HelperService } from "./HelperService";
-import { IQService, IHttpService } from "../node_modules/@types/angular/index";
-import { TfsOptionsModel } from "../model/TfsOptionsModel";
-import { WorkItemModel } from "../model/WorkItemModel";
-const hs = new HelperService();
+import { IQService, IHttpService, IRequestConfig } from "../node_modules/@types/angular/index";
+import { TfsOptionsModel } from "../models/TfsOptionsModel";
+import { WorkItemModel } from "../models/WorkItemModel";
 
 const fieldMap = {
   sprint: "System.IterationPath",
@@ -20,97 +19,92 @@ const itemTypeMap = {
 const fieldMapKeys = Object.keys(fieldMap);
 const fieldMapValues = Object.keys(fieldMap).map(k => fieldMap[k]);
 
-function mapVssItem(item: any) {
-  let model = new WorkItemModel();
-  model.id = "" + item.id;
-  var sp = (item.fields["Microsoft.VSTS.Common.Severity"] || "").split("-");
-  model.severity = sp && sp.length > 1 ? (sp[1] || "").trim().toLowerCase() : "";
-  model.effort = "" + (parseInt(item.fields["Microsoft.VSTS.Scheduling.Effort"]) || 0);
-  model.sprint = item.fields["System.IterationPath"];
-  model.assignedTo = item.fields["System.AssignedTo"] || "";
-  if (model.assignedTo) {
-    model.assignedTo = model.assignedTo.substr(0, model.assignedTo.indexOf("<")).trim();
-  }
-
-  model.status = item["System.State"];
-  model.closedDate = new Date(item.fields["Microsoft.VSTS.Common.ClosedDate"]);
-  model.createdDate = new Date(item.fields["System.CreatedDate"]);
-  model.title = item.fields["System.Title"];
-
-  model.type = itemTypeMap[item.fields["System.WorkItemType"]];
-
-  if (model.title.toLowerCase().indexOf("sprint ") == 0) {
-    model.type = "sprint";
-  }
-
-  model.sprint = model.sprint.substr(model.sprint.lastIndexOf("\\") + 1);
-  model.viewUrl = this.url + "/_workitems/edit/" + model.id;
-
-  model.parentIds = (item.relations || [])
-    .filter(relation => relation.rel == "System.LinkTypes.Hierarchy-Reverse")
-    .map(rel => hs.getIdFromUri(rel.url));
-  model.childrenIds = (item.relations || [])
-    .filter(relation => relation.rel == "System.LinkTypes.Hierarchy-Forward")
-    .map(rel => hs.getIdFromUri(rel.url));
-  model.source = "vss";
-  return model;
-}
-
 export class VssServiceHttpBuilder {
   private url: string;
   private headers: any;
+  private hs: HelperService;
 
   constructor(public $q: IQService, public $http: IHttpService, public options: TfsOptionsModel) {
     this.url = this.options.CollectionUrl + this.options.ProjectName;
+    this.hs = new HelperService($q, $http);
     this.headers = {
       Authorization: "Basic " + btoa("" + ":" + this.options.PersonalAccessToken)
     };
   }
 
   mapItem(item) {
-    return mapVssItem(item);
+    let model = new WorkItemModel();
+    const self = this;
+    model.id = "" + item.id;
+    var sp = (item.fields["Microsoft.VSTS.Common.Severity"] || "").split("-");
+    model.severity = sp && sp.length > 1 ? (sp[1] || "").trim().toLowerCase() : "";
+    model.effort = "" + (parseInt(item.fields["Microsoft.VSTS.Scheduling.Effort"]) || 0);
+    model.sprint = item.fields["System.IterationPath"];
+    model.assignedTo = item.fields["System.AssignedTo"] || "";
+    if (model.assignedTo) {
+      model.assignedTo = model.assignedTo.substr(0, model.assignedTo.indexOf("<")).trim();
+    }
+
+    model.status = item["System.State"];
+    model.closedDate = "" + item.fields["Microsoft.VSTS.Common.ClosedDate"];
+    model.createdDate = "" + item.fields["System.CreatedDate"];
+    model.title = item.fields["System.Title"];
+
+    model.type = itemTypeMap[item.fields["System.WorkItemType"]];
+
+    if (model.title.toLowerCase().indexOf("sprint ") == 0) {
+      model.type = "sprint";
+    }
+
+    model.sprint = model.sprint.substr(model.sprint.lastIndexOf("\\") + 1);
+    model.viewUrl = this.url + "/_workitems/edit/" + model.id;
+
+    model.parentIds = (item.relations || [])
+      .filter(relation => relation.rel == "System.LinkTypes.Hierarchy-Reverse")
+      .map(rel => this.hs.getIdFromUri(rel.url));
+    model.childrenIds = (item.relations || [])
+      .filter(relation => relation.rel == "System.LinkTypes.Hierarchy-Forward")
+      .map(rel => this.hs.getIdFromUri(rel.url));
+    model.source = "vss";
+    return model;
   }
 
   queryItems(query) {
-    var deferred = this.$q.defer();
-    this.$http(this.query(query)).then(function(r: any) {
-      var ids = r.data.workItems.map(item => item.id);
-      var httpOptions = [];
-      hs.batchArray(ids, 50, function(batch) {
-        var ho = this.getDetails(batch);
+    const self = this;
+    let deferred = self.$q.defer();
+
+    self.$http(self.query(query)).then(function(r: any) {
+      let ids = r.data.workItems.map(item => item.id);
+      let httpOptions: IRequestConfig[] = [];
+      self.hs.batchArray(ids, 50, function(batch) {
+        const ho = self.getDetails(batch);
         if (!!ho) {
           httpOptions.push(ho);
         }
       });
-      hs.batchPromises(
-        this.$q,
-        httpOptions,
-        this.$http,
-        {
-          batchSize: 4,
-          retry: false
-        },
-        function(response) {
-          var mapped = (response.data.value || []).map(mapVssItem);
-          return mapped;
-        }
-      ).then(deferred.resolve);
+      self.hs
+        .batchPromises(httpOptions, { batchSize: 4, retry: false }, function(response) {
+          return (response.data.value || []).map(m => self.mapItem(m));
+        })
+        .then(deferred.resolve);
     });
     return deferred.promise;
   }
   getItems(query) {
+    const self = this;
     if (typeof query == "string") {
-      return this.queryItems(query);
+      return self.queryItems(query);
     }
     if (query instanceof Array) {
-      const d = this.$q.defer();
+      const d = self.$q.defer();
 
-      this.$http(this.getDetails(query)).then(function(response: any) {
-        var mapped = (response.data.value || []).map(this.mapItem);
+      self.$http(self.getDetails(query)).then(function(response: any) {
+        const mapped = (response.data.value || []).map(m => self.mapItem(m));
         d.resolve(mapped);
       });
       return d.promise;
     }
+    return null;
   }
 
   query(query) {
@@ -124,15 +118,15 @@ export class VssServiceHttpBuilder {
     };
   }
 
-  getDetails(itemIds) {
-    var params = {
+  getDetails(itemIds): ng.IRequestConfig {
+    const query = this.hs.createQuery({
       "api-version": "2.0",
       ids: (itemIds || []).filter(i => !!i).join(","),
       $expand: "all"
-    };
+    });
     return {
       method: "GET",
-      url: this.options.CollectionUrl + "/_apis/wit/workitems?" + hs.createQuery(params),
+      url: this.options.CollectionUrl + "/_apis/wit/workitems?" + query,
       headers: this.headers
     };
   }

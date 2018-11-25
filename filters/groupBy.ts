@@ -6,7 +6,7 @@ app.filter("groupBy", [
   function($parse) {
     /// https://stackoverflow.com/questions/19992090/angularjs-group-by-directive-without-external-dependencies#20645945
     return function(list, group_by) {
-      var filtered = [];
+      var filtered: any[] = [];
       var prev_item = null;
       var group_changed = false;
       // this is a new field which is added to each item where we append "_CHANGED"

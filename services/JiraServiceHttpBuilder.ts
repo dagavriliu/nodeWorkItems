@@ -1,7 +1,6 @@
-import { JiraOptionsModel } from "./../model/JiraOptionsModel";
-import { WorkItemModel } from "./../model/WorkItemModel";
+import { JiraOptionsModel } from "../models/JiraOptionsModel";
+import { WorkItemModel } from "../models/WorkItemModel";
 import { HelperService } from "./HelperService";
-const hs = new HelperService();
 const fieldMap = {
   sprint: "System.IterationPath",
   type: "System.WorkItemType",
@@ -12,41 +11,12 @@ const fieldMap = {
   title: "System.Title"
 };
 
-function mapJiraItem(item: any) {
-  let model = new WorkItemModel();
-  model.id = item.key;
-  if (!item.fields) {
-    return model;
-  }
-  let f = item.fields;
-  let sprint = f.customfield_10007 ? f.customfield_10007[0] : null;
-  let sprintObj: any = {};
-  let parts = /\[(.*)\]/.exec(sprint);
-  if (parts && parts.length > 1) parts[1].split(",").map(part => (sprintObj[part.split("=")[0]] = part.split("=")[1]));
-  model.sprint = (sprintObj.name || "").replace("DEV ", "");
-  model.type = (f.issuetype ? f.issuetype.name : "").toLowerCase();
-  model.assignedTo = f.assignee ? f.assignee.displayName : "";
-  if ((model.assignedTo || "").toLowerCase().indexOf("gavriliu") > -1) {
-    model.assignedTo = "Dan Gavriliu";
-  }
-  model.status = (f.status ? f.status.name : "").toLowerCase();
-  model.closedDate = new Date(f.resolutiondate);
-  model.createdDate = new Date(f.created);
-  model.title = f.summary;
-  model.parentIds = f.parent ? [f.parent.key] : [];
-  model.childrenIds = f.subtasks ? f.subtasks.map((t: any) => t.key) : [];
-  model.viewUrl = this.options.endpoint + "/browse/" + model.id;
-  model.severity = item.fields.priority.name.toLowerCase();
-  model.effort = item.fields.customfield_10005;
-  model.source = "jira";
-  return model;
-}
-
 export class JiraServiceHttpBuilder {
   private headers: any;
   private url: string;
-
+  private hs: HelperService;
   constructor(public $q: ng.IQService, public $http: ng.IHttpService, public options: JiraOptionsModel) {
+    this.hs = new HelperService($q, $http);
     this.headers = {
       Authorization: "Basic " + btoa(this.options.username + ":" + this.options.password)
     };
@@ -54,26 +24,55 @@ export class JiraServiceHttpBuilder {
   }
 
   mapItem(item: any) {
-    return mapJiraItem(item);
+    let model = new WorkItemModel();
+    model.id = item.key;
+    if (!item.fields) {
+      return model;
+    }
+    let f = item.fields;
+    let sprint = f.customfield_10007 ? f.customfield_10007[0] : null;
+    let sprintObj: any = {};
+    let parts = /\[(.*)\]/.exec(sprint);
+    if (parts && parts.length > 1) parts[1].split(",").map(part => (sprintObj[part.split("=")[0]] = part.split("=")[1]));
+    model.sprint = (sprintObj.name || "").replace("DEV ", "");
+    model.type = (f.issuetype ? f.issuetype.name : "").toLowerCase();
+    model.assignedTo = f.assignee ? f.assignee.displayName : "";
+    if ((model.assignedTo || "").toLowerCase().indexOf("gavriliu") > -1) {
+      model.assignedTo = "Dan Gavriliu";
+    }
+    model.status = (f.status ? f.status.name : "").toLowerCase();
+    model.closedDate = "" + f.resolutiondate;
+    model.createdDate = "" + f.created;
+    model.title = f.summary;
+    model.parentIds = f.parent ? [f.parent.key] : [];
+    model.childrenIds = f.subtasks ? f.subtasks.map((t: any) => t.key) : [];
+    model.viewUrl = this.options.endpoint + "/browse/" + model.id;
+    model.severity = item.fields.priority.name.toLowerCase();
+    model.effort = item.fields.customfield_10005;
+    model.source = "jira";
+    return model;
   }
 
   getItems(query: string) {
-    const deferred = this.$q.defer();
+    const self = this;
+    const deferred = self.$q.defer();
 
-    this.$http(this.query(query)).then(
+    self.$http(self.query(query)).then(
       function handleSuccess(result: any) {
         let skip = 0,
           take = 50,
           total = result.data.total;
-        let httpOptions = [];
-        let issues = result.data.issues.map(mapJiraItem);
+        let configs: ng.IRequestConfig[] = [];
+        let issues = result.data.issues.map(m => self.mapItem(m));
         while (skip + take <= total) {
           skip += take;
-          httpOptions.push(this.query(query, skip, take));
+          configs.push(self.query(query, skip, take));
         }
-        hs.batchPromises(this.$q, httpOptions, this.$http, { batchSize: 5 }, function(response: any) {
-          return response.data.issues.map(mapJiraItem);
-        }).then(items => deferred.resolve(issues.concat(items)));
+        self.hs
+          .batchPromises(configs, { batchSize: 5 }, function(response: any) {
+            return response.data.issues.map(m => self.mapItem(m));
+          })
+          .then(items => deferred.resolve(issues.concat(items)));
       },
       function handleError(response) {
         console.error(response);
@@ -82,7 +81,7 @@ export class JiraServiceHttpBuilder {
 
     return deferred.promise;
   }
-  item(id: string) {
+  item(id: string): ng.IRequestConfig {
     return {
       method: "GET",
       url: this.url + "/rest/api/2/issue/" + id,
@@ -90,7 +89,7 @@ export class JiraServiceHttpBuilder {
     };
   }
 
-  query(query: string, skip: number = 0, take: number = 50) {
+  query(query: string, skip: number = 0, take: number = 50): ng.IRequestConfig {
     var params = {
       jql: query,
       startAt: skip || 0,
@@ -99,7 +98,7 @@ export class JiraServiceHttpBuilder {
     };
     return {
       method: "GET",
-      url: this.url + "/rest/api/2/search?" + hs.createQuery(params),
+      url: this.url + "/rest/api/2/search?" + this.hs.createQuery(params),
       headers: this.headers
     };
   }

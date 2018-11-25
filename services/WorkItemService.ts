@@ -1,11 +1,12 @@
-import { WorkItemModel } from "./../model/WorkItemModel";
-import { WorkItemGroupStatistics } from "./../model/WorkItemGroupStatistics";
-import { WorkItemGroup } from "./../model/WorkItemGroup";
-import { AggregateModel } from "../model/AggregateModel";
-
 const angular = require("angular");
-const WorkItemSchema = require("./WorkItemSchema.json");
 const Ajv = require("ajv");
+
+import { WorkItemModel } from "../models/WorkItemModel";
+import { WorkItemGroupStatistics } from "../models/WorkItemGroupStatistics";
+import { WorkItemGroup } from "../models/WorkItemGroup";
+import { AggregateModel } from "../models/AggregateModel";
+
+const WorkItemSchema = require("./WorkItemSchema.json");
 const ajv = new Ajv();
 const validator = ajv.compile(WorkItemSchema);
 
@@ -20,7 +21,7 @@ function getGroupKeysByFn(items: any[], groupKeyFn: ((a: any) => string)) {
   items.forEach(function(item) {
     addToMap(item);
     if (item.children && item.children.length > 0) {
-      item.children.forEach(addToMap);
+      item.children.forEach(c => addToMap(c));
     }
   });
   return keyMap;
@@ -71,7 +72,7 @@ var subitemTypes = ["bug sub-task", "code review", "sub-task", "task", "test tas
 var itemTypes = ["bug", "story"];
 
 export function processResults(items: any[]) {
-  const errors = [];
+  const errors: any[] = [];
   items.forEach(item => (!validator(item) ? errors.push(validator.errors) : null));
   console.error(errors);
   //var localItems = items.filter(item=>['deleted', 'removed'].indexOf((item.status || '').toLowerCase()) < 0);
@@ -90,6 +91,7 @@ export function processResults(items: any[]) {
 export function aggregateItems(items: any[]): AggregateModel {
   let processed = processResults(items);
   let data: AggregateModel = {
+    raw: angular.copy(items),
     workItems: processed,
     perSprint: groupPerSprint(processed),
     perUser: groupPerUser(processed)
