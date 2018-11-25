@@ -1,0 +1,19 @@
+<div class="table-view" id="grouped-by-user">
+    <h1>
+        <a ng-click="ui.showPerUser = !!!ui.showPerUser">({{ui.showPerUser ? '+' : '-'}}) Items per user ({{itemsPerUser.length}})</a>
+    </h1>
+    <div ng-show="!ui.showPerUser">
+        <div ng-repeat="group in itemsPerUser | orderBy : 'key'">
+            <h2>
+                <a ng-click="group.showItems = !!!group.showItems">({{group.showItems ? '-':'+'}}) {{group.key}} </a>
+                <a ng-click="$ctrl.toggleSet(group.values, 'showDetails', group, 'showItemDetails')">({{group.showItemDetails ? '--' : '++'}})</a>
+            </h2>
+            <span>({{group.values.length}}) items - ({{group.stats.activeEffort}}) active effort - ({{group.stats.totalEffort}})
+            - total effort
+        </span>
+            <div ng-show="group.showItems" ng-repeat="item in group.values | orderBy : ['-onlyCodeReview','sprint', 'closedDate']">
+                <work-item-details item="item" highlight="{assignedTo: group.key}" users="users" ng-class="{'odd' : $odd}"></work-item-details>
+            </div>
+        </div>
+    </div>
+</div>

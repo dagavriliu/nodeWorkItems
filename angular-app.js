@@ -15,6 +15,10 @@ export const app = angular.module('workItemApp', ['ui.select', 'ui.grid']);
 const vssOptions = require("./config/VssOptions.json");
 const jiraOptions = require("./config/JiraOptions.json");
 
+export function toggleSet(items, propertyName, stateHolder, stateHolderProperty) {
+    stateHolder[stateHolderProperty] = !!!stateHolder[stateHolderProperty];
+    items.forEach(item => item[propertyName] = stateHolder[stateHolderProperty]);
+}
 
 app.controller('WorkItemController', ['$q', '$scope', '$http', function($q, $scope, $http) {
 
@@ -57,10 +61,7 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function($q, $sco
     }
     controller.loadJson();
 
-    this.toggleSet = function(items, propertyName, stateHolder, stateHolderProperty) {
-        stateHolder[stateHolderProperty] = !!!stateHolder[stateHolderProperty];
-        items.forEach(item => item[propertyName] = stateHolder[stateHolderProperty]);
-    }
+    this.toggleSet = toggleSet;
 
     this.runLiveQueries = function() {
         var jiraQuery = "sprint in ('DEV Sprint 144', 'DEV Sprint 145', 'DEV Sprint 146', 'DEV Sprint 147', 'DEV Sprint 148', 'DEV Sprint 149', 'DEV Sprint 150', 'DEV Sprint 151', 'DEV Sprint 152', 'DEV Sprint 153', 'DEV Sprint 154', 'DEV Sprint 155', 'DEV Sprint 156', 'DEV Sprint 157', 'DEV Sprint 158', 'DEV Sprint 159', 'DEV Sprint 160', 'DEV Sprint 161', 'DEV Sprint 162', 'DEV Sprint 163', 'DEV Sprint 164', 'DEV Sprint 165') and project = DEV ORDER BY created ASC";
