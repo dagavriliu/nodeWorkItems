@@ -28,16 +28,18 @@
             <h1>
                 <a ng-click="wic.view.ui.showPerUser = !!!wic.view.ui.showPerUser">({{wic.view.ui.showPerUser ? '+' : '-'}}) Items per user ({{wic.view.perUser.length}})</a>
             </h1>
-            <div ng-show="!wic.view.ui.showPerUser" ng-repeat="group in wic.view.perUser | orderBy : 'key'">
-                <h2>
-                    <a ng-click="group.showItems = !!!group.showItems">({{group.showItems ? '-':'+'}}) {{group.key}} </a>
-                    <a ng-click="wic.toggleSet(group.values, 'showDetails', group, 'showItemDetails')">({{group.showItemDetails ? '--' : '++'}})</a>
-                </h2>
-                <span>({{group.values.length}}) items - ({{group.stats.activeEffort}}) active effort - ({{group.stats.totalEffort}})
+            <div ng-show="!wic.view.ui.showPerUser">
+                <div ng-repeat="group in wic.view.perUser | orderBy : 'key'">
+                    <h2>
+                        <a ng-click="group.showItems = !!!group.showItems">({{group.showItems ? '-':'+'}}) {{group.key}} </a>
+                        <a ng-click="wic.toggleSet(group.values, 'showDetails', group, 'showItemDetails')">({{group.showItemDetails ? '--' : '++'}})</a>
+                    </h2>
+                    <span>({{group.values.length}}) items - ({{group.stats.activeEffort}}) active effort - ({{group.stats.totalEffort}})
                     - total effort
                 </span>
-                <div ng-show="group.showItems" ng-repeat="item in group.values | orderBy : ['-onlyCodeReview','sprint', 'closedDate']">
-                    <work-item-details item="item" highlight="{assignedTo: group.key}" users="wic.view.users" ng-class="{'odd' : $odd}"></work-item-details>
+                    <div ng-show="group.showItems" ng-repeat="item in group.values | orderBy : ['-onlyCodeReview','sprint', 'closedDate']">
+                        <work-item-details item="item" highlight="{assignedTo: group.key}" users="wic.view.users" ng-class="{'odd' : $odd}"></work-item-details>
+                    </div>
                 </div>
             </div>
         </div>
@@ -45,17 +47,17 @@
             <h1>
                 <a ng-click="wic.view.ui.showAll = !!!wic.view.ui.showAll">({{wic.view.ui.showAll ? '-' : '+'}}) Items per sprint ({{wic.view.perSprint.length}})</a>
             </h1>
-            <div ng-show="wic.view.ui.showAll" ng-repeat="sprint in wic.view.perSprint | orderBy : ['key']">
-                <h2>
-                    <a ng-click="wic.toggleSet(sprint.values, 'showItem', sprint, 'showItems')">{{sprint.showItems ? '-' : '+'}} {{sprint.key}}
-                    </a>
-                    <a ng-click="wic.toggleSet(sprint.values, 'showDetails', sprint, 'showItemDetails')">({{sprint.showItemDetails ? '--' : '++'}})
-                    </a>
-                </h2>
-                <span>({{sprint.values.length}}) items - ({{sprint.stats.totalEffort}}) - total effort </span>
+            <div ng-show="wic.view.ui.showAll">
+                <div ng-repeat="sprint in wic.view.perSprint | orderBy : ['key']">
+                    <h2>
+                        <a ng-click="wic.toggleSet(sprint.values, 'showItem', sprint, 'showItems')">{{sprint.showItems ? '-' : '+'}} {{sprint.key}} </a>
+                        <a ng-click="wic.toggleSet(sprint.values, 'showDetails', sprint, 'showItemDetails')">({{sprint.showItemDetails ? '--' : '++'}})</a>
+                    </h2>
+                    <span>({{sprint.values.length}}) items - ({{sprint.stats.totalEffort}}) - total effort </span>
 
-                <div ng-repeat="item in sprint.values" ng-show="sprint.showItems">
-                    <work-item-details item="item" users="wic.view.users" ng-class="{'odd' : $odd}"></work-item-details>
+                    <div ng-repeat="item in sprint.values" ng-show="sprint.showItems">
+                        <work-item-details item="item" users="wic.view.users" ng-class="{'odd' : $odd}"></work-item-details>
+                    </div>
                 </div>
             </div>
         </div>

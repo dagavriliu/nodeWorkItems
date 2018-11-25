@@ -13,5 +13,6 @@ require('./node_modules/angular-ui-select/select.js');
 require('./node_modules/angular-ui-select/select.css');
 require('./angular-app');
 require('./style.css');
+require('./directives/WorkItemDetails.js');
 
 // angular.bootstrap(document.body, ['workItemApp']);

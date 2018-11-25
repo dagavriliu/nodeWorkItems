@@ -1,18 +1,9 @@
 import angular from 'angular';
+import { VssServiceHttpBuilder } from './VssServiceHttpBuilder';
+import { JiraServiceHttpBuilder } from './JiraServiceHttpBuilder';
+import { LocalCache } from './LocalCache'
 
-import {
-    VssServiceHttpBuilder
-} from './VssServiceHttpBuilder';
-import {
-    JiraServiceHttpBuilder
-} from './JiraServiceHttpBuilder';
-import {
-    LocalCache
-} from './LocalCache'
-
-import {
-    HelperService
-} from './HelperService';
+import { HelperService } from './HelperService';
 const hs = new HelperService();
 
 
@@ -20,7 +11,7 @@ const WorkItemSchema = require('./WorkItemSchema.json');
 const Ajv = require('ajv');
 // require('./helpers');
 
-const app = angular.module('workItemApp', ['ui.select', 'ui.grid']);
+export const app = angular.module('workItemApp', ['ui.select', 'ui.grid']);
 const vssOptions = require("./config/VssOptions.json");
 const jiraOptions = require("./config/JiraOptions.json");
 
@@ -212,20 +203,7 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function($q, $sco
         return perUserHierarchical;
     }
 }]);
-app.directive('workItemDetails', function() {
-    return {
-        scope: {
-            item: '=',
-            users: '=',
-            highlight: '='
-        },
-        restrict: 'E',
-        templateUrl: 'workitem-partial.html',
-        link: function($scope, $element, $attrs) {
-            Object.keys($scope.item).forEach(p => !!$scope.highlight && $scope.highlight.hasOwnProperty[p] ? $scop.highlight[p] = $scope.item[p] : null);
-        }
-    }
-})
+
 app.filter('groupBy', ['$parse', function($parse) {
     /// https://stackoverflow.com/questions/19992090/angularjs-group-by-directive-without-external-dependencies#20645945
     return function(list, group_by) {
