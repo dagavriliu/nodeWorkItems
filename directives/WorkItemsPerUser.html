@@ -6,7 +6,7 @@
         <div ng-repeat="group in items | orderBy : 'key'">
             <h2>
                 <a ng-click="group.showItems = !!!group.showItems">({{group.showItems ? '-':'+'}}) {{group.key}} </a>
-                <a ng-click="$ctrl.toggleSet(group.values, 'showDetails', group, 'showItemDetails')">({{group.showItemDetails ? '--' : '++'}})</a>
+                <a ng-click="toggleSet(group.values, 'showDetails', group, 'showItemDetails')">({{group.showItemDetails ? '--' : '++'}})</a>
             </h2>
             <span>({{group.values.length}}) items - ({{group.stats.activeEffort}}) active effort - ({{group.stats.totalEffort}})
             - total effort

@@ -59,8 +59,10 @@ td>div.right {
     width: 10%;
 }
 
-#grouped-by-sprint .odd table {
-    border: 1px solid black;
+.odd table {
+    border: none;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
 }
 
 .highlight {
