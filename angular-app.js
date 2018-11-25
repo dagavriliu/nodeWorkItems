@@ -1,15 +1,13 @@
 import angular from 'angular';
-import { VssServiceHttpBuilder } from './VssServiceHttpBuilder';
-import { JiraServiceHttpBuilder } from './JiraServiceHttpBuilder';
-import { LocalCache } from './LocalCache'
+import { VssServiceHttpBuilder } from './services/VssServiceHttpBuilder';
+import { JiraServiceHttpBuilder } from './services/JiraServiceHttpBuilder';
 
-import { HelperService } from './HelperService';
+import { HelperService } from './services/HelperService';
+import * as WorkItemHelpers from './services/WorkItemService';
 const hs = new HelperService();
 
-
-const WorkItemSchema = require('./WorkItemSchema.json');
+const WorkItemSchema = require('./services/WorkItemSchema.json');
 const Ajv = require('ajv');
-// require('./helpers');
 
 export const app = angular.module('workItemApp', ['ui.select', 'ui.grid']);
 const vssOptions = require("./config/VssOptions.json");
@@ -39,8 +37,8 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function($q, $sco
 
         controller._raw = angular.copy(items);
         controller.view.workItems = processResults(items);
-        controller.view.perUser = groupPerUser(controller.view.workItems);
-        controller.view.perSprint = groupPerSprint(controller.view.workItems);
+        controller.view.perUser = WorkItemHelpers.groupPerUser(controller.view.workItems);
+        controller.view.perSprint = WorkItemHelpers.groupPerSprint(controller.view.workItems);
         controller.view.users = controller.view.perUser.map(item => item.key);
     }
 
@@ -97,14 +95,6 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function($q, $sco
         controller.view.workItems = [];
         controller.view.perUser = [];
 
-        function applyOnBatch(mapFn) {
-            return function(batch) {
-                var mappedBatch = batch.map(mapFn);
-                var processed = processResults(mappedBatch);
-                updateController(processed.concat(controller.view.workItems || []));
-            }
-        }
-
         $q.all([
             jiraBuilder.getItems(jiraQuery),
             // vssBuilder.getItems(vssQuery)
@@ -112,7 +102,6 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function($q, $sco
             var agg = results.reduce((a, i) => a.concat(i), []);
             updateController(agg);
         });
-
     }
 
     var subitemTypes = ["bug sub-task", "code review", "sub-task", "task", "test task"];
@@ -135,128 +124,7 @@ app.controller('WorkItemController', ['$q', '$scope', '$http', function($q, $sco
         return parents;
     }
 
-    function getGroupKeysByFn(items, groupKeyFn) {
-        var keyMap = {};
-        var addToMap = function(item) {
-            var itemKey = groupKeyFn(item);
-            if (!!itemKey) {
-                keyMap[itemKey] = itemKey;
-            }
-        }
-        items.forEach(function(item) {
-            addToMap(item);
-            if (item.children && item.children.length > 0) {
-                item.children.forEach(addToMap);
-            }
-        });
-        return keyMap;
-    }
-
-    function groupPerSprint(items) {
-        var keyMap = getGroupKeysByFn(items, item => item.sprint);
-        var perSprintHierarchical = Object.keys(keyMap).map(function(sprintKey) {
-            var entry = {
-                key: sprintKey,
-                values: angular.copy(items.filter(item => item.sprint == sprintKey || item.children.some(child => child.sprint == sprintKey))),
-                stats: {
-                    codeReviews: [],
-                    taskCount: 0,
-                    totalEffort: 0
-                }
-            };
-            entry.stats.taskCount = entry.values.length;
-            entry.stats.totalEffort = entry.values.reduce((a, i) => a + (parseInt(i.effort) || 0), 0);
-            return entry;
-        });
-        return perSprintHierarchical;
-    }
 
 
-    function groupPerUser(items) {
 
-        var keyMap = getGroupKeysByFn(items, item => item.assignedTo);
-
-        var perUserHierarchical = Object.keys(keyMap).map(function(key) {
-            var entry = {
-                key: key,
-                values: angular.copy(items.filter(item => item.assignedTo == key || item.children.some(child => child.assignedTo == key))),
-                stats: {
-                    codeReviews: [],
-                    taskCount: 0,
-                    totalEffort: 0,
-                    activeEffort: 0
-                }
-            };
-            entry.values.forEach(function(item) {
-                var cr = item.children.filter(c => c.assignedTo == key && c.title.toLowerCase().indexOf('code review') > -1);
-                if (cr.length > 0) {
-                    entry.stats.codeReviews.push(item);
-                    item.onlyCodeReview = true;
-                } else {
-                    entry.stats.activeEffort += parseInt(item.effort) || 0;
-                }
-                entry.stats.totalEffort += parseInt(item.effort) || 0;
-            });
-            entry.stats.taskCount = entry.values.reduce((acc, item) => acc + item.children.filter(c => c.assignedTo == entry.key).length, 1);
-
-            return entry;
-        });
-        return perUserHierarchical;
-    }
-}]);
-
-app.filter('groupBy', ['$parse', function($parse) {
-    /// https://stackoverflow.com/questions/19992090/angularjs-group-by-directive-without-external-dependencies#20645945
-    return function(list, group_by) {
-
-        var filtered = [];
-        var prev_item = null;
-        var group_changed = false;
-        // this is a new field which is added to each item where we append "_CHANGED"
-        // to indicate a field change in the list
-        //was var new_field = group_by + '_CHANGED'; - JB 12/17/2013
-        var new_field = 'group_by_CHANGED';
-
-        // loop through each item in the list
-        angular.forEach(list, function(item) {
-
-            group_changed = false;
-
-            // if not the first item
-            if (prev_item !== null) {
-
-                // check if any of the group by field changed
-
-                //force group_by into Array
-                group_by = angular.isArray(group_by) ? group_by : [group_by];
-
-                //check each group by parameter
-                for (var i = 0, len = group_by.length; i < len; i++) {
-                    let parsedPrev = $parse(group_by[i])(prev_item);
-                    let parsedItem = $parse(group_by[i])(item);
-                    if (parsedPrev !== parsedItem) {
-                        group_changed = true;
-                    }
-                }
-
-            } // otherwise we have the first item in the list which is new
-            else {
-                group_changed = true;
-            }
-
-            // if the group changed, then add a new field to the item
-            // to indicate this
-            if (group_changed) {
-                item[new_field] = true;
-            } else {
-                item[new_field] = false;
-            }
-
-            filtered.push(item);
-            prev_item = item;
-
-        });
-
-        return filtered;
-    };
 }]);

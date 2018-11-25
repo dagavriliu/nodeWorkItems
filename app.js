@@ -16,5 +16,6 @@ require('./style.css');
 require('./directives/WorkItemDetails');
 require('./directives/WorkItemsPerUser');
 require('./directives/WorkItemsPerSprint');
+require('./filters/groupBy');
 
 // angular.bootstrap(document.body, ['workItemApp']);
