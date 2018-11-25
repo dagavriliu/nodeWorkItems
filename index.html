@@ -16,25 +16,8 @@
         <input type="text" ng-model='$ctrl.view.cachedViewPath' />
         <button type="button" ng-click="$ctrl.loadView()">load view</button>
         <button type="button" ng-click="$ctrl.saveView()">save view</button>
-        <work-items-per-user items-per-user="$ctrl.view.perUser" users="$ctrl.view.users"></work-items-per-user>
-        <div class="table-view" id="grouped-by-sprint">
-            <h1>
-                <a ng-click="$ctrl.view.ui.showAll = !!!$ctrl.view.ui.showAll">({{$ctrl.view.ui.showAll ? '-' : '+'}}) Items per sprint ({{$ctrl.view.perSprint.length}})</a>
-            </h1>
-            <div ng-show="$ctrl.view.ui.showAll">
-                <div ng-repeat="sprint in $ctrl.view.perSprint | orderBy : ['key']">
-                    <h2>
-                        <a ng-click="$ctrl.toggleSet(sprint.values, 'showItem', sprint, 'showItems')">{{sprint.showItems ? '-' : '+'}} {{sprint.key}} </a>
-                        <a ng-click="$ctrl.toggleSet(sprint.values, 'showDetails', sprint, 'showItemDetails')">({{sprint.showItemDetails ? '--' : '++'}})</a>
-                    </h2>
-                    <span>({{sprint.values.length}}) items - ({{sprint.stats.totalEffort}}) - total effort </span>
-
-                    <div ng-repeat="item in sprint.values" ng-show="sprint.showItems">
-                        <work-item-details item="item" users="$ctrl.view.users" ng-class="{'odd' : $odd}"></work-item-details>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <work-items-per-user items="$ctrl.view.perUser" users="$ctrl.view.users"></work-items-per-user>
+        <work-items-per-sprint items="$ctrl.view.perSprint" users="$ctr.view.users"></work-items-per-sprint>
     </div>
 
 

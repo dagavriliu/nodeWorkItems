@@ -1,9 +1,9 @@
 <div class="table-view" id="grouped-by-user">
     <h1>
-        <a ng-click="ui.showPerUser = !!!ui.showPerUser">({{ui.showPerUser ? '+' : '-'}}) Items per user ({{itemsPerUser.length}})</a>
+        <a ng-click="ui.hide = !!!ui.hide">({{ui.hide ? '+' : '-'}}) Items per user ({{items.length}})</a>
     </h1>
-    <div ng-show="!ui.showPerUser">
-        <div ng-repeat="group in itemsPerUser | orderBy : 'key'">
+    <div ng-show="!ui.hide">
+        <div ng-repeat="group in items | orderBy : 'key'">
             <h2>
                 <a ng-click="group.showItems = !!!group.showItems">({{group.showItems ? '-':'+'}}) {{group.key}} </a>
                 <a ng-click="$ctrl.toggleSet(group.values, 'showDetails', group, 'showItemDetails')">({{group.showItemDetails ? '--' : '++'}})</a>

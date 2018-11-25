@@ -1,0 +1,18 @@
+<div class="table-view" id="grouped-by-sprint">
+    <h1>
+        <a ng-click="ui.hide = !!!ui.hide">({{ui.hide ? '+' : '-'}}) Items per sprint ({{items.length}})</a>
+    </h1>
+    <div ng-show="!ui.hide">
+        <div ng-repeat="sprint in items | orderBy : ['key']">
+            <h2>
+                <a ng-click="toggleSet(sprint.values, 'showItem', sprint, 'showItems')">{{sprint.showItems ? '-' : '+'}} {{sprint.key}} </a>
+                <a ng-click="toggleSet(sprint.values, 'showDetails', sprint, 'showItemDetails')">({{sprint.showItemDetails ? '--' : '++'}})</a>
+            </h2>
+            <span>({{sprint.values.length}}) items - ({{sprint.stats.totalEffort}}) - total effort </span>
+
+            <div ng-repeat="item in sprint.values" ng-show="sprint.showItems">
+                <work-item-details item="item" users="users" ng-class="{'odd' : $odd}"></work-item-details>
+            </div>
+        </div>
+    </div>
+</div>

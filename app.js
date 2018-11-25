@@ -14,6 +14,7 @@ require('./node_modules/angular-ui-select/select.css');
 require('./angular-app');
 require('./style.css');
 require('./directives/WorkItemDetails');
-require('./directives/WorkItemsPerUser')
+require('./directives/WorkItemsPerUser');
+require('./directives/WorkItemsPerSprint');
 
 // angular.bootstrap(document.body, ['workItemApp']);

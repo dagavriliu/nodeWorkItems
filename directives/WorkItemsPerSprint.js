@@ -1,6 +1,6 @@
 import { app, toggleSet } from '../angular-app';
 
-app.directive('workItemsPerUser', function() {
+app.directive('workItemsPerSprint', function() {
     return {
         scope: {
             items: '=',
@@ -8,7 +8,7 @@ app.directive('workItemsPerUser', function() {
             highlight: '='
         },
         restrict: 'E',
-        templateUrl: './directives/WorkItemsPerUser.html',
+        templateUrl: './directives/WorkItemsPerSprint.html',
         link: function($scope, $element, $attrs) {
             $scope.toggleSet = toggleSet;
             $scope.ui = {
