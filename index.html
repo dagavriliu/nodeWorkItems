@@ -6,18 +6,23 @@
 </head>
 
 <body ng-app="workItemApp">
-    <h2>Work Items</h2>
-    <a id='download-json'></a>
+
     <div ng-controller="WorkItemController as $ctrl" class="container">
-        <input type="text" ng-model="$ctrl.view.cachedJsonPath" />
-        <button type="button" ng-click="$ctrl.loadJson()">load JSON</button>
-        <button type="button" ng-click="$ctrl.saveJson()">save JSON</button>
-        <button type="button" ng-click="$ctrl.runLiveQueries()">live Query</button>
-        <input type="text" ng-model='$ctrl.view.cachedViewPath' />
-        <button type="button" ng-click="$ctrl.loadView()">load view</button>
-        <button type="button" ng-click="$ctrl.saveView()">save view</button>
-        <work-items-per-user items="$ctrl.view.perUser" users="$ctrl.view.users"></work-items-per-user>
-        <work-items-per-sprint items="$ctrl.view.perSprint" users="$ctr.view.users"></work-items-per-sprint>
+        <h2>Work Items</h2>
+        <a id='download-json'></a>
+        <div class="buttons">
+            <input type="text" ng-model="$ctrl.view.cachedJsonPath" />
+            <button type="button" ng-click="$ctrl.loadJson()">load JSON</button>
+            <button type="button" ng-click="$ctrl.saveJson()">save JSON</button>
+            <button type="button" ng-click="$ctrl.runLiveQueries()">live Query</button>
+            <input type="text" ng-model='$ctrl.view.cachedViewPath' />
+            <button type="button" ng-click="$ctrl.loadView()">load view</button>
+            <button type="button" ng-click="$ctrl.saveView()">save view</button>
+        </div>
+        <div>
+            <work-items-per-user items="$ctrl.view.perUser" users="$ctrl.view.users"></work-items-per-user>
+            <work-items-per-sprint items="$ctrl.view.perSprint" users="$ctr.view.users"></work-items-per-sprint>
+        </div>
     </div>
 
 

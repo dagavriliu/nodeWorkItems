@@ -75,8 +75,8 @@ export class HelperService {
     }, {});
   }
 
-  batchPromises($q: ng.IQService, items: any[], fn: (p: any) => Promise<any>, options: any, filter: any) {
-    const results: any[] = [];
+  batchPromises<T>($q: ng.IQService, items: T[], fn: (p: T) => Promise<T>, options: any, filter: any) {
+    const batched: any[] = [];
     let index = options.batchSize - 1;
     let _filter = filter || ((item: any) => item);
 
@@ -93,9 +93,9 @@ export class HelperService {
           const filtered = _filter(result);
           if (filtered) {
             if (filtered instanceof Array) {
-              filtered.forEach(f => result.push(f));
+              filtered.forEach(batched.push);
             } else {
-              results.push(filtered);
+              batched.push(filtered);
             }
           }
           return getNextItem();
@@ -109,7 +109,7 @@ export class HelperService {
       return getCurrentItem(item);
     });
     return $q.all(promises).then(function() {
-      return results;
+      return batched;
     });
   }
 

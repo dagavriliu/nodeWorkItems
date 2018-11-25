@@ -45,14 +45,14 @@ function groupPerUser(items: WorkItemModel[]): WorkItemGroup[] {
   var keyMap = getGroupKeysByFn(items, item => item.assignedTo);
 
   var grouped = Object.keys(keyMap).map(function(key) {
-    var entry = {
+    let entry: WorkItemGroup = {
       key: key,
       values: angular.copy(items.filter(item => item.assignedTo == key || item.children.some(child => child.assignedTo == key))),
       stats: new WorkItemGroupStatistics()
     };
-    entry.values.forEach(function(item: WorkItemModel) {
-      var cr = item.children.filter(c => c.assignedTo == key && c.title.toLowerCase().indexOf("code review") > -1);
-      if (cr.length > 0) {
+    entry.values.forEach(function(item) {
+      const cr = item.children.filter(c => c.assignedTo == key && c.title.toLowerCase().indexOf("code review") > -1);
+      if (cr && cr.length > 0) {
         entry.stats.codeReviews.push(item);
         item.onlyCodeReview = true;
       } else {
@@ -71,8 +71,9 @@ var subitemTypes = ["bug sub-task", "code review", "sub-task", "task", "test tas
 var itemTypes = ["bug", "story"];
 
 export function processResults(items: any[]) {
-  items.forEach(item => (!validator(item) ? console.log(validator.errors) : null));
-
+  const errors = [];
+  items.forEach(item => (!validator(item) ? errors.push(validator.errors) : null));
+  console.error(errors);
   //var localItems = items.filter(item=>['deleted', 'removed'].indexOf((item.status || '').toLowerCase()) < 0);
   let parentIdMap: any = {};
   var localItems = items;

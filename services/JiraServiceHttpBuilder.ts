@@ -12,6 +12,36 @@ const fieldMap = {
   title: "System.Title"
 };
 
+function mapJiraItem(item: any) {
+  let model = new WorkItemModel();
+  model.id = item.key;
+  if (!item.fields) {
+    return model;
+  }
+  let f = item.fields;
+  let sprint = f.customfield_10007 ? f.customfield_10007[0] : null;
+  let sprintObj: any = {};
+  let parts = /\[(.*)\]/.exec(sprint);
+  if (parts && parts.length > 1) parts[1].split(",").map(part => (sprintObj[part.split("=")[0]] = part.split("=")[1]));
+  model.sprint = (sprintObj.name || "").replace("DEV ", "");
+  model.type = (f.issuetype ? f.issuetype.name : "").toLowerCase();
+  model.assignedTo = f.assignee ? f.assignee.displayName : "";
+  if ((model.assignedTo || "").toLowerCase().indexOf("gavriliu") > -1) {
+    model.assignedTo = "Dan Gavriliu";
+  }
+  model.status = (f.status ? f.status.name : "").toLowerCase();
+  model.closedDate = new Date(f.resolutiondate);
+  model.createdDate = new Date(f.created);
+  model.title = f.summary;
+  model.parentIds = f.parent ? [f.parent.key] : [];
+  model.childrenIds = f.subtasks ? f.subtasks.map((t: any) => t.key) : [];
+  model.viewUrl = this.options.endpoint + "/browse/" + model.id;
+  model.severity = item.fields.priority.name.toLowerCase();
+  model.effort = item.fields.customfield_10005;
+  model.source = "jira";
+  return model;
+}
+
 export class JiraServiceHttpBuilder {
   private headers: any;
   private url: string;
@@ -24,33 +54,7 @@ export class JiraServiceHttpBuilder {
   }
 
   mapItem(item: any) {
-    let model = new WorkItemModel();
-    model.id = item.key;
-    if (!item.fields) {
-      return model;
-    }
-    let f = item.fields;
-    let sprint = f.customfield_10007 ? f.customfield_10007[0] : null;
-    let sprintObj: any = {};
-    let parts = /\[(.*)\]/.exec(sprint);
-    if (parts && parts.length > 1) parts[1].split(",").map(part => (sprintObj[part.split("=")[0]] = part.split("=")[1]));
-    model.sprint = (sprintObj.name || "").replace("DEV ", "");
-    model.type = (f.issuetype ? f.issuetype.name : "").toLowerCase();
-    model.assignedTo = f.assignee ? f.assignee.displayName : "";
-    if ((model.assignedTo || "").toLowerCase().indexOf("gavriliu") > -1) {
-      model.assignedTo = "Dan Gavriliu";
-    }
-    model.status = (f.status ? f.status.name : "").toLowerCase();
-    model.closedDate = new Date(f.resolutiondate);
-    model.createdDate = new Date(f.created);
-    model.title = f.summary;
-    model.parentIds = f.parent ? [f.parent.key] : [];
-    model.childrenIds = f.subtasks ? f.subtasks.map((t: any) => t.key) : [];
-    model.viewUrl = this.options.endpoint + "/browse/" + model.id;
-    model.severity = item.fields.priority.name.toLowerCase();
-    model.effort = item.fields.customfield_10005;
-    model.source = "jira";
-    return model;
+    return mapJiraItem(item);
   }
 
   getItems(query: string) {
@@ -62,18 +66,14 @@ export class JiraServiceHttpBuilder {
           take = 50,
           total = result.data.total;
         let httpOptions = [];
-        let issues = result.data.issues.map(this.mapItem);
+        let issues = result.data.issues.map(mapJiraItem);
         while (skip + take <= total) {
           skip += take;
           httpOptions.push(this.query(query, skip, take));
         }
         hs.batchPromises(this.$q, httpOptions, this.$http, { batchSize: 5 }, function(response: any) {
-          var mapped = response.data.issues.map(this.mapItem);
-          return mapped;
-        }).then(function(items) {
-          var result = issues.concat(items);
-          deferred.resolve(result);
-        });
+          return response.data.issues.map(mapJiraItem);
+        }).then(items => deferred.resolve(issues.concat(items)));
       },
       function handleError(response) {
         console.error(response);
