@@ -13,6 +13,6 @@ export class WorkItemModel {
   severity: string = "";
   effort: string = "";
   source: string = "";
-  children: any[] = [];
+  children: WorkItemModel[] = [];
   onlyCodeReview?: boolean;
 }

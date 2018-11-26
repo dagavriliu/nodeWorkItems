@@ -60,10 +60,13 @@ function groupPerUser(items: WorkItemModel[]): WorkItemGroup[] {
       stats: new WorkItemGroupStatistics()
     };
     entry.values.forEach(function(item) {
-      const cr = item.children.filter(c => c.assignedTo == key && c.title.toLowerCase().indexOf("code review") > -1);
-      if (cr && cr.length > 0) {
+      const userTasks = item.children.filter(c => c.assignedTo == key);
+      const cr = userTasks.filter(c => c.type == "code review");
+      if (cr.length > 0) {
         entry.stats.codeReviews.push(item);
-        item.onlyCodeReview = true;
+        if (userTasks.length == cr.length) {
+          item.onlyCodeReview = true;
+        }
       } else {
         entry.stats.activeEffort += parseInt(item.effort) || 0;
       }
