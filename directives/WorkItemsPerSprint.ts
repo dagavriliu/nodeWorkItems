@@ -12,7 +12,8 @@ app.directive("workItemsPerSprint", function() {
     link: function($scope, $element, $attrs) {
       $scope.toggleSet = toggleSet;
       $scope.ui = {
-        hide: true
+        hide: true,
+        showItems: false
       };
     }
   };

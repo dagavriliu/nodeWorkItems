@@ -34,7 +34,8 @@ class WorkItemController {
   }
   saveJson() {
     if (this.model) {
-      const json = Helpers.stringifyOnce(this.model.raw);
+      // const json = Helpers.stringifyOnce(this.model.raw);
+      const json = this.model.raw;
       this.$http.post("/upload/" + this.view.cachedJsonPath, json).then(function(response) {
         console.log("upload complete");
       });

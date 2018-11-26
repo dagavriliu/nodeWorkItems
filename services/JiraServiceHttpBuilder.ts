@@ -1,6 +1,6 @@
 import { JiraOptionsModel } from "../models/JiraOptionsModel";
 import { WorkItemModel } from "../models/WorkItemModel";
-import { HelperService } from "./HelperService";
+import { HelperService, parseDate } from "./HelperService";
 const fieldMap = {
   sprint: "System.IterationPath",
   type: "System.WorkItemType",
@@ -41,8 +41,8 @@ export class JiraServiceHttpBuilder {
       model.assignedTo = "Dan Gavriliu";
     }
     model.status = (f.status ? f.status.name : "").toLowerCase();
-    model.closedDate = "" + f.resolutiondate;
-    model.createdDate = "" + f.created;
+    model.closedDate = parseDate(f.resolutiondate);
+    model.createdDate = parseDate(f.created);
     model.title = f.summary;
     model.parentIds = f.parent ? [f.parent.key] : [];
     model.childrenIds = f.subtasks ? f.subtasks.map((t: any) => t.key) : [];

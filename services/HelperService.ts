@@ -1,6 +1,16 @@
-export function toggleSet(items: any[], propertyName: string, stateHolder: any, stateHolderProperty: string) {
+export function subreduce<T, V>(items: T[], selector: (a: T) => V, reducer) {
+  const selected = items.map(i => selector(i));
+  const reduced = selected.reduce((a, i) => reducer(a, i), selected[0]);
+  return reduced;
+}
+
+export function parseDate(input: string): Date {
+  return new Date(input);
+}
+
+export function toggleSet(set: any[], setPropertyName: string, stateHolder: any, stateHolderProperty: string) {
   stateHolder[stateHolderProperty] = !!!stateHolder[stateHolderProperty];
-  items.forEach(item => (item[propertyName] = stateHolder[stateHolderProperty]));
+  set.forEach(item => (item[setPropertyName] = stateHolder[stateHolderProperty]));
 }
 
 export function stringifyOnce(obj: any, replacer?: any, indent?: string | number) {

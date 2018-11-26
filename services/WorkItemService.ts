@@ -5,6 +5,7 @@ import { WorkItemModel } from "../models/WorkItemModel";
 import { WorkItemGroupStatistics } from "../models/WorkItemGroupStatistics";
 import { WorkItemGroup } from "../models/WorkItemGroup";
 import { AggregateModel } from "../models/AggregateModel";
+import { parseDate, subreduce } from "../services/HelperService";
 
 const WorkItemSchema = require("./WorkItemSchema.json");
 const ajv = new Ajv();
@@ -30,13 +31,20 @@ function getGroupKeysByFn(items: any[], groupKeyFn: ((a: any) => string)) {
 function groupPerSprint(items: WorkItemModel[]): WorkItemGroup[] {
   let keyMap = getGroupKeysByFn(items, item => item.sprint);
   let grouped = Object.keys(keyMap).map(function(sprintKey) {
-    let entry = {
+    let entry: WorkItemGroup = {
       key: sprintKey,
       values: angular.copy(items.filter(item => item.sprint == sprintKey || item.children.some(child => child.sprint == sprintKey))),
       stats: new WorkItemGroupStatistics()
     };
+    const minReduce = (a, i) => (a > i ? i : a);
+    const maxReduce = (a, i) => (a > i ? a : i);
     entry.stats.taskCount = entry.values.length;
     entry.stats.totalEffort = entry.values.reduce((a, i) => a + (parseInt(i.effort) || 0), 0);
+    entry.stats.min.closedDate = subreduce(entry.values, v => v.closedDate, minReduce);
+    entry.stats.min.createdDate = subreduce(entry.values, v => v.createdDate, minReduce);
+    entry.stats.max.closedDate = subreduce(entry.values, v => v.closedDate, maxReduce);
+    entry.stats.max.createdDate = subreduce(entry.values, v => v.createdDate, maxReduce);
+
     return entry;
   });
   return grouped;
@@ -74,8 +82,10 @@ var itemTypes = ["bug", "story"];
 export function processResults(items: any[]) {
   const errors: any[] = [];
   items.forEach(item => (!validator(item) ? errors.push(validator.errors) : null));
-  console.error(errors);
-  //var localItems = items.filter(item=>['deleted', 'removed'].indexOf((item.status || '').toLowerCase()) < 0);
+  if (errors.length > 0) {
+    console.log("items have schema errors");
+  }
+
   let parentIdMap: any = {};
   var localItems = items;
   localItems.forEach(function(item) {
@@ -89,9 +99,10 @@ export function processResults(items: any[]) {
 }
 
 export function aggregateItems(items: any[]): AggregateModel {
+  const raw = angular.copy(items);
   let processed = processResults(items);
   let data: AggregateModel = {
-    raw: angular.copy(items),
+    raw: raw,
     workItems: processed,
     perSprint: groupPerSprint(processed),
     perUser: groupPerUser(processed)

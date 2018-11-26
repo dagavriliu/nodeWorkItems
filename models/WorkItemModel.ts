@@ -4,8 +4,8 @@ export class WorkItemModel {
   type: string = "";
   assignedTo: string = "";
   status: string = "";
-  closedDate: string = "";
-  createdDate: string = "";
+  closedDate: Date = new Date(0, 0, 0);
+  createdDate: Date = new Date(0, 0, 0);
   title: string = "";
   parentIds: Number[] = [];
   childrenIds: Number[] = [];

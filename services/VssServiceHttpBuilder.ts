@@ -1,4 +1,4 @@
-import { HelperService } from "./HelperService";
+import { HelperService, parseDate } from "./HelperService";
 import { IQService, IHttpService, IRequestConfig } from "../node_modules/@types/angular/index";
 import { TfsOptionsModel } from "../models/TfsOptionsModel";
 import { WorkItemModel } from "../models/WorkItemModel";
@@ -46,8 +46,8 @@ export class VssServiceHttpBuilder {
     }
 
     model.status = item["System.State"];
-    model.closedDate = "" + item.fields["Microsoft.VSTS.Common.ClosedDate"];
-    model.createdDate = "" + item.fields["System.CreatedDate"];
+    model.closedDate = parseDate(item.fields["Microsoft.VSTS.Common.ClosedDate"]);
+    model.createdDate = parseDate(item.fields["System.CreatedDate"]);
     model.title = item.fields["System.Title"];
 
     model.type = itemTypeMap[item.fields["System.WorkItemType"]];
