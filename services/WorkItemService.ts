@@ -66,8 +66,10 @@ function groupPerUser(items: WorkItemModel[]): WorkItemGroup[] {
         entry.stats.codeReviews.push(item);
         if (userTasks.length == cr.length) {
           item.onlyCodeReview = true;
+          entry.stats.codeReviewCount++;
         }
       } else {
+        entry.stats.itemCount++;
         entry.stats.activeEffort += parseInt(item.effort) || 0;
       }
       entry.stats.totalEffort += parseInt(item.effort) || 0;

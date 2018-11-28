@@ -16,4 +16,5 @@ require("./controllers/WorkItemController");
 require("./directives/WorkItemDetails");
 require("./directives/WorkItemsPerUser");
 require("./directives/WorkItemsPerSprint");
+require("./directives/WorkItemGroupStatistics");
 require("./filters/groupBy");
